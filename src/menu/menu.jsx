@@ -367,7 +367,6 @@ var Menu = React.createClass({
         //Open the menu
         el.style.transition = Transitions.easeOut();
         el.style.height = this._getCurrentHeight() + 'px';
-
         //Set the overflow to visible after the animation is done so
         //that other nested menus can be shown
         CssEvent.onTransitionEnd(el, function() {

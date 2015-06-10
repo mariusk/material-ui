@@ -16,6 +16,7 @@ var DropDownIcon = React.createClass({
     closeOnMenuItemTouchTap: React.PropTypes.bool,
     iconStyle: React.PropTypes.object,
     iconClassName: React.PropTypes.string,
+    iconLigature: React.PropTypes.string
   },
 
   getInitialState: function() {
@@ -49,7 +50,7 @@ var DropDownIcon = React.createClass({
         transition: Transitions.easeOut(),
         right: '-14px !important',
         top: '9px !important',
-        opacity: (this.props.open) ? 1 : 0
+        opacity: (this.state.open) ? 1 : 0
       },
       menuItem: { // similair to drop down menu's menu item styles
         paddingRight: (Spacing.iconSize + (Spacing.desktopGutterLess*2)),
@@ -72,13 +73,12 @@ var DropDownIcon = React.createClass({
     } = this.props;
 
     var styles = this.getStyles();
-
     return (
       <div {...other} style={this.mergeAndPrefix(styles.root, this.props.style)}>
           <div onTouchTap={this._onControlClick}>
               <FontIcon
                 className={iconClassName}
-                style={iconStyle}/>
+                style={iconStyle}>{this.props.iconLigature}</FontIcon>
               {this.props.children}
           </div>
           <Menu
