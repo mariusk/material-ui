@@ -1,6 +1,7 @@
 var React = require('react/addons');
 var StylePropable = require('./mixins/style-propable');
 var Colors = require('./styles/colors');
+var Typography = require('./styles/typography');
 
 var SvgIcon = React.createClass({
 
@@ -12,15 +13,15 @@ var SvgIcon = React.createClass({
 
   propTypes: {
     icon: React.PropTypes.element,
-    iconBgColor: React.PropTypes.string,
-    iconColor: React.PropTypes.string,
+    backgroundColor: React.PropTypes.string,
+    color: React.PropTypes.string,
     src: React.PropTypes.string
   },
 
   getDefaultProps: function() {
     return {
-      iconBgColor: Colors.grey400,
-      iconColor: Colors.white
+      backgroundColor: Colors.grey400,
+      color: Colors.white
     };
   },
 
@@ -28,8 +29,8 @@ var SvgIcon = React.createClass({
 
     var {
       icon,
-      iconBgColor,
-      iconColor,
+      backgroundColor,
+      color,
       src,
       style,
       ...other
@@ -40,15 +41,21 @@ var SvgIcon = React.createClass({
         height: src ? 38 : 40,
         width: src ? 38 : 40,
         userSelect: 'none',
-        backgroundColor: iconBgColor,
+        backgroundColor: backgroundColor,
         borderRadius: '50%',
         border: src ? 'solid 1px' : 'none',
         borderColor: this.context.muiTheme.palette.borderColor,
+
+        //Needed for letter avatars
+        textAlign: 'center',
+        lineHeight: '40px',
+        fontSize: 24,
+        color: color
       },
 
       iconStyles: {
-        color: iconColor,
-        fill: iconColor,
+        color: color,
+        fill: color,
         margin: 8
       }
     };
@@ -66,6 +73,7 @@ var SvgIcon = React.createClass({
     ) : (
       <div {...other} style={mergedRootStyles}>
         {iconElement}
+        {this.props.children}
       </div>
     );
   }

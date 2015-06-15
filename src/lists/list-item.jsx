@@ -18,10 +18,13 @@ var ListItem = React.createClass({
     disableTouchTap: React.PropTypes.bool,
     insetChildren: React.PropTypes.bool,
     leftAvatar: React.PropTypes.element,
+    leftCheckbox: React.PropTypes.element,
     leftIcon: React.PropTypes.element,
     onMouseOut: React.PropTypes.func,
     onMouseOver: React.PropTypes.func,
+    rightAvatar: React.PropTypes.element,
     rightIcon: React.PropTypes.element,
+    rightToggle: React.PropTypes.element,
     secondaryText: React.PropTypes.node,
     secondaryTextLines: React.PropTypes.oneOf([1, 2])
   },
@@ -44,10 +47,13 @@ var ListItem = React.createClass({
       disableTouchTap,
       insetChildren,
       leftAvatar,
+      leftCheckbox,
       leftIcon,
       onMouseOut,
       onMouseOver,
+      rightAvatar,
       rightIcon,
+      rightToggle,
       secondaryText,
       secondaryTextLines,
       style,
@@ -56,10 +62,11 @@ var ListItem = React.createClass({
 
     var textColor = this.context.muiTheme.palette.textColor;
     var hoverColor = ColorManipulator.fade(textColor, 0.03);
-    var singleAvatar = !secondaryText && leftAvatar;
-    var singleNoAvatar = !secondaryText && !leftAvatar;
+    var singleAvatar = !secondaryText && (leftAvatar || rightAvatar);
+    var singleNoAvatar = !secondaryText && !(leftAvatar || rightAvatar);
     var twoLine = secondaryText && secondaryTextLines === 1;
     var threeLine = secondaryText && secondaryTextLines > 1;
+    var hasCheckbox = leftCheckbox || rightToggle;
 
     var styles = {
       root: {
@@ -75,10 +82,14 @@ var ListItem = React.createClass({
 
       //This inner div is need so that ripples will span the entire container
       innerDiv: {
-        paddingLeft: leftIcon || leftAvatar || insetChildren ? 72 : 16,
-        paddingRight: rightIcon ? 56 : 16,
+        paddingLeft: leftIcon || leftAvatar || leftCheckbox || insetChildren ? 72 : 16,
+        paddingRight: rightIcon || rightAvatar ? 56 : rightToggle ? 72 : 16,
         paddingBottom: singleAvatar ? 20 : 16,
         paddingTop: singleNoAvatar || threeLine ? 16 : 20
+      },
+
+      label: {
+        cursor: 'pointer'
       },
 
       icons: {
@@ -102,10 +113,33 @@ var ListItem = React.createClass({
         right: 4
       },
 
-      leftAvatar: {
+      avatars: {
         position: 'absolute',
         top: singleAvatar ? 8 : 16,
+      },
+
+      leftAvatar: {
         left: 16
+      },
+
+      rightAvatar: {
+        right: 16
+      },
+
+      leftCheckbox: {
+        position: 'absolute',
+        display: 'block',
+        width: 24,
+        top: twoLine ? 24 : singleAvatar ? 16 : 12,
+        left: 16
+      },
+
+      rightToggle: {
+        position: 'absolute',
+        display: 'block',
+        width: 54,
+        top: twoLine ? 25 : singleAvatar ? 17 : 13,
+        right: 8
       },
 
       secondaryText: {
@@ -130,39 +164,32 @@ var ListItem = React.createClass({
 
     var mergedRootStyles = this.mergeAndPrefix(styles.root, style);
     var mergedDivStyles = this.mergeAndPrefix(styles.root, styles.innerDiv, style);
-    var mergedLeftIconStyles = leftIcon ? 
-      this.mergeStyles(styles.icons, styles.leftIcon, leftIcon.props.style) : null;
-    var mergedRightIconStyles = rightIcon ? 
-      this.mergeStyles(styles.icons, styles.rightIcon, rightIcon.props.style) : null;
-    var mergedLeftAvatarStyles = leftAvatar ? 
-      this.mergeStyles(styles.leftAvatar, leftAvatar.props.style) : null;
-    var mergedSecondaryTextStyles = secondaryTextIsAnElement ? 
+    var mergedLabelStyles = this.mergeAndPrefix(styles.root, styles.innerDiv, styles.label, style);
+    var mergedSecondaryTextStyles = secondaryTextIsAnElement ?
       this.mergeStyles(styles.secondaryText, secondaryText.props.style) : null;
 
-    var leftIconElement = leftIcon ? React.cloneElement(leftIcon, {
-      style: mergedLeftIconStyles
-    }) : null;
-    var rightIconElement = rightIcon ? React.cloneElement(rightIcon, {
-      style: mergedRightIconStyles
-    }) : null;
-    var leftAvatarElement = leftAvatar ? React.cloneElement(leftAvatar, {
-      style: mergedLeftAvatarStyles
-    }) : null;
-    var secondaryTextElement = React.isValidElement(secondaryText) ? React.cloneElement(secondaryText, {
-      style: mergedSecondaryTextStyles
-    }) : secondaryText ? (
-      <div style={styles.secondaryText}>{secondaryText}</div>
-    ) : null;
+    var contentChildren = [];
 
-    return disableTouchTap ? (
-      <div style={mergedDivStyles}>
-        {leftIconElement}
-        {rightIconElement}
-        {leftAvatarElement}
-        {this.props.children}
-        {secondaryTextElement}
-      </div>
-    ) : (
+    this._pushElement(contentChildren, leftIcon, this.mergeStyles(styles.icons, styles.leftIcon));
+    this._pushElement(contentChildren, rightIcon, this.mergeStyles(styles.icons, styles.rightIcon));
+    this._pushElement(contentChildren, leftAvatar, this.mergeStyles(styles.avatars, styles.leftAvatar));
+    this._pushElement(contentChildren, rightAvatar, this.mergeStyles(styles.avatars, styles.rightAvatar));
+    this._pushElement(contentChildren, leftCheckbox, this.mergeStyles(styles.leftCheckbox));
+    this._pushElement(contentChildren, rightToggle, this.mergeStyles(styles.rightToggle));
+
+    if (this.props.children) contentChildren.push(this.props.children);
+    if (secondaryText) contentChildren.push(
+      React.isValidElement(secondaryText) ?
+        React.cloneElement(secondaryText, {key: 'secondaryText', style: mergedSecondaryTextStyles}) :
+        <div key="secondaryText" style={styles.secondaryText}>{secondaryText}</div>
+    );
+
+    return hasCheckbox || disableTouchTap ?
+      React.createElement(
+        hasCheckbox ? 'label' : 'div',
+        { style: hasCheckbox ? mergedLabelStyles : mergedDivStyles },
+        contentChildren
+      ) : (
       <EnhancedButton
         {...other}
         linkButton={true}
@@ -170,14 +197,23 @@ var ListItem = React.createClass({
         onMouseOver={this._handleMouseOver}
         style={mergedRootStyles}>
         <div style={styles.innerDiv}>
-          {leftIconElement}
-          {rightIconElement}
-          {leftAvatarElement}
-          {this.props.children}
-          {secondaryTextElement}
+          {contentChildren}
         </div>
       </EnhancedButton>
     );
+
+  },
+
+  _pushElement: function(children, element, baseStyles) {
+    if (element) {
+      var styles = this.mergeStyles(baseStyles, element.props.style);
+      children.push(
+        React.cloneElement(element, {
+          key: children.length,
+          style: styles
+        })
+      );
+    }
   },
 
   _handleMouseOver: function(e) {
